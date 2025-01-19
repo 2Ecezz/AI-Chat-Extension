@@ -5,9 +5,16 @@
     "description": "A Chrome extension with an AI-powered chatbot.",
     "action": {
       "default_popup": "index.html",
-      "default_icon": "icon.png"
+      "default_icon": "48.png" 
+    },
+    "icons": {
+      "16": "16.png",       
+      "48": "48.png",       
+      "128": "128.png"     
     },
     "permissions": ["storage"],
-    "host_permissions": ["https://api.openai.com/v1/completions"]
+    "host_permissions": [
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyB40g0ziMwaXfomrOzcY9M56YNyhiRMsmQ"
+    ]
   }
   
