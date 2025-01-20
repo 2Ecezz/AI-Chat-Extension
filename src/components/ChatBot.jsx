@@ -2,28 +2,28 @@ import React, { useState } from "react";
 import axios from "axios";
 
 const ChatBot = () => {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState([]); // To store chat messages
+  const [input, setInput] = useState(""); // To handle user input
+  const [loading, setLoading] = useState(false); // Loading state for bot response
 
+  // Function to handle sending a message
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim()) return; // Prevent empty messages
 
-    // Adding user message to chat
+    // Add user's message to chat
     const userMessage = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
-
-    setInput(""); // Clear input field
-    setLoading(true); // Set loading to true
+    setInput(""); // Clear the input field
+    setLoading(true); // Show typing indicator
 
     try {
-      // Send message to Google Gemini API
+      // Sending the user's message to the Google Gemini API
       const response = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyB40g0ziMwaXfomrOzcY9M56YNyhiRMsmQ`, // Use your actual API key here
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyB40g0ziMwaXfomrOzcY9M56YNyhiRMsmQ`,
         {
           contents: [
             {
-              parts: [{ text: input }], // The user's input as 'text'
+              parts: [{ text: input }],
             },
           ],
         },
@@ -34,32 +34,21 @@ const ChatBot = () => {
         }
       );
 
-      // Log the entire response to inspect its structure
-      console.log("API Response:", response.data);
+      // Check the API response structure and extract bot's reply
+      console.log("API Response:", response.data); // Log full response for debugging
+      const botMessageText =
+        response.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
-      // Now, accessing the correct structure based on the response you showed
-      if (
-        response.data &&
-        response.data.candidates &&
-        response.data.candidates[0] &&
-        response.data.candidates[0].content &&
-        response.data.candidates[0].content.parts &&
-        response.data.candidates[0].content.parts[0] &&
-        response.data.candidates[0].content.parts[0].text
-      ) {
-        const botMessage = {
-          sender: "bot",
-          text: response.data.candidates[0].content.parts[0].text.trim(), // Correctly access the text content
-        };
-        setMessages((prev) => [...prev, botMessage]); // Update messages with bot's reply
+      if (botMessageText) {
+        const botMessage = { sender: "bot", text: botMessageText };
+        setMessages((prev) => [...prev, botMessage]);
       } else {
-        // If the expected content is not found, show a more descriptive error
-        console.log("No valid 'text' found in the response.");
+        // Handle unexpected response structure
         const errorMessage = {
           sender: "bot",
-          text: "Sorry, I couldn't get a response from the API. Please try again.",
+          text: "Sorry, I couldn't get a valid response from the API. Please try again.",
         };
-        setMessages((prev) => [...prev, errorMessage]); // Show error message if no valid response
+        setMessages((prev) => [...prev, errorMessage]);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -67,123 +56,204 @@ const ChatBot = () => {
         sender: "bot",
         text: "Sorry, I couldn't process your request. Please try again.",
       };
-      setMessages((prev) => [...prev, errorMessage]); // Show error message
+      setMessages((prev) => [...prev, errorMessage]);
     }
 
-    setLoading(false); // Set loading to false
+    setLoading(false); // Hide typing indicator
   };
 
   return (
     <div
       style={{
-        fontFamily: "'Arial', sans-serif",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         height: "100vh",
-        maxWidth: "600px",
+        maxWidth: "400px",
         margin: "auto",
-        padding: "1rem",
-        backgroundColor: "#f9f9f9",
-        borderRadius: "8px",
-        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+        border: "1px solid #ddd",
+        borderRadius: "10px",
+        padding: "0",
+        backgroundColor: "#fdfdfd",
+        fontFamily: "'Poppins', sans-serif",
+        boxShadow: "0px 4px 12px rgba(88, 27, 255, 0.1)",
       }}
     >
-      {/* Chat Messages */}
+      {/* Header */}
       <div
         style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "1rem",
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "inset 0 0 10px rgba(0, 0, 0, 0.05)",
+          textAlign: "center",
+          padding: "1rem 0",
+          backgroundColor: "#fff4f2", // Light pink background
         }}
       >
-        {messages.map((msg, index) => (
-          <div
-            key={index}
+        <h3
+          style={{
+            margin: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "1.5rem",
+            color: "#333",
+            gap: "0.5rem",
+          }}
+        >
+          <img
+            src="48.png" // Replace with your actual image path or URL
+            alt="AI Chat Bot Icon"
             style={{
-              display: "flex",
-              justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
-              marginBottom: "0.75rem",
+              width: "32px", // Adjust size for better visibility
+              height: "32px",
             }}
-          >
-            <div
-              style={{
-                maxWidth: "70%",
-                padding: "0.75rem",
-                borderRadius: "8px",
-                backgroundColor: msg.sender === "user" ? "#4caf50" : "#e0e0e0",
-                color: msg.sender === "user" ? "#fff" : "#000",
-                textAlign: msg.sender === "user" ? "right" : "left",
-              }}
-            >
-              {msg.text}
-            </div>
-          </div>
-        ))}
-        {loading && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-start",
-              marginBottom: "0.75rem",
-            }}
-          >
-            <div
-              style={{
-                maxWidth: "70%",
-                padding: "0.75rem",
-                borderRadius: "8px",
-                backgroundColor: "#e0e0e0",
-                color: "#000",
-              }}
-            >
-              Typing...
-            </div>
-          </div>
-        )}
+          />
+          AI Chat Bot
+        </h3>
+        <span
+          style={{
+            fontSize: "0.9rem",
+            color: "#777",
+            display: "block",
+            marginTop: "0.5rem",
+          }}
+        >
+          Model
+        </span>
+        <div
+          style={{
+            marginTop: "0.5rem",
+            padding: "0.25rem 0.5rem",
+            backgroundColor: "#fff",
+            borderRadius: "16px",
+            border: "1px solid #ddd",
+            display: "inline-block",
+            fontSize: "1rem",
+            fontWeight: "500",
+            color: "#333",
+          }}
+        >
+          Google Gemini 2.0
+        </div>
       </div>
 
-      {/* Input Box */}
+      {/* Chat Messages Area */}
+<div
+  style={{
+    flex: 1,
+    overflowY: "auto", // Scrollable messages
+    padding: "1rem",
+  }}
+>
+  {messages.map((msg, index) => (
+    <div
+      key={index}
+      style={{
+        display: "flex",
+        justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
+        marginBottom: "1rem",
+      }}
+    >
+      {msg.sender !== "user" && (
+        <img
+          src="129.png"
+          style={{
+            width: "30px",
+            height: "30px",
+            marginRight: "10px",
+          }}
+        />
+      )}
+      <div
+        style={{
+          maxWidth: "70%",
+          padding: "0.75rem 1rem",
+          borderRadius: "20px",
+          backgroundColor:
+            msg.sender === "user" ? "var(--message-bg-user)" : "var(--message-bg-bot)",
+          color: msg.sender === "user" ? "#fff" : "#000",
+          boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <span>{msg.text}</span>
+      </div>
+    </div>
+  ))}
+
+  {loading && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-start",
+            marginBottom: "1rem",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "70%",
+              padding: "0.75rem 1rem",
+              borderRadius: "20px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start", // Align spinner to the left
+            }}
+          >
+            <div
+              style={{
+                border: "4px solid rgba(5, 91, 204, 0.6)",
+                borderTop: "4px solid #fff",
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                animation: "spin 3s linear infinite",
+                marginRight: "10px",
+              }}
+            />
+          </div>
+        </div>
+      )}
+  </div>
+
+      {/* Input Section */}
       <div
         style={{
           display: "flex",
-          marginTop: "1rem",
+          alignItems: "center",
+          padding: "0.75rem 1rem",
           borderTop: "1px solid #ddd",
-          paddingTop: "1rem",
+          backgroundColor: "#fff",
+          borderRadius: "0 0 10px 10px",
         }}
       >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
+          placeholder="Enter your message..."
           style={{
             flex: 1,
             padding: "0.75rem",
-            borderRadius: "8px",
             border: "1px solid #ddd",
-            marginRight: "0.5rem",
+            borderRadius: "20px",
             outline: "none",
-            fontSize: "1rem",
+            fontSize: "0.9rem",
+            marginRight: "0.5rem",
           }}
         />
         <button
           onClick={sendMessage}
           style={{
-            backgroundColor: "#4caf50",
+            backgroundColor: "var(--primary-color)",
             color: "#fff",
             border: "none",
-            borderRadius: "8px",
-            padding: "0.75rem 1rem",
+            borderRadius: "20px",
+            padding: "0.5rem 1rem",
+            fontSize: "0.9rem",
             cursor: "pointer",
-            fontSize: "1rem",
           }}
           disabled={loading}
         >
-          {loading ? "Sending..." : "Send"}
+          {loading ? "..." : "Send"}
         </button>
       </div>
     </div>
