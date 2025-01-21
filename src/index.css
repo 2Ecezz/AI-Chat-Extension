@@ -1,10 +1,10 @@
 :root {
   --header-bg-color: #ffebd6;
-  --primary-color: #4caf50;
+  --primary-color: #0a69c2;
   --primary-hover-color: #43a047;
   --secondary-color: #f9f9f9;
   --message-bg-bot: #e0e0e0;
-  --message-bg-user: #4caf50;
+  --message-bg-user: #0a69c2;
 }
 ::-webkit-scrollbar {
   display: none;

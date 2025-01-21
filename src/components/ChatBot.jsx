@@ -1,10 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const ChatBot = () => {
-  const [messages, setMessages] = useState([]); // To store chat messages
+  const [messages, setMessages] = useState(() => {
+    // Load messages from localStorage on initial render
+    const savedMessages = localStorage.getItem("chatMessages");
+    return savedMessages ? JSON.parse(savedMessages) : [];
+  });
   const [input, setInput] = useState(""); // To handle user input
   const [loading, setLoading] = useState(false); // Loading state for bot response
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("chatMessages", JSON.stringify(messages));
+  }, [messages]);
 
   // Function to handle sending a message
   const sendMessage = async () => {
@@ -84,7 +93,7 @@ const ChatBot = () => {
         style={{
           textAlign: "center",
           padding: "1rem 0",
-          backgroundColor: "#fff4f2", // Light pink background
+          backgroundColor: "#fff4f2",
         }}
       >
         <h3
@@ -102,7 +111,7 @@ const ChatBot = () => {
             src="48.png" // Replace with your actual image path or URL
             alt="AI Chat Bot Icon"
             style={{
-              width: "32px", // Adjust size for better visibility
+              width: "32px",
               height: "32px",
             }}
           />
@@ -136,83 +145,81 @@ const ChatBot = () => {
       </div>
 
       {/* Chat Messages Area */}
-<div
-  style={{
-    flex: 1,
-    overflowY: "auto", // Scrollable messages
-    padding: "1rem",
-  }}
->
-  {messages.map((msg, index) => (
-    <div
-      key={index}
-      style={{
-        display: "flex",
-        justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
-        marginBottom: "1rem",
-      }}
-    >
-      {msg.sender !== "user" && (
-        <img
-          src="129.png"
-          style={{
-            width: "30px",
-            height: "30px",
-            marginRight: "10px",
-          }}
-        />
-      )}
       <div
         style={{
-          maxWidth: "70%",
-          padding: "0.75rem 1rem",
-          borderRadius: "20px",
-          backgroundColor:
-            msg.sender === "user" ? "var(--message-bg-user)" : "var(--message-bg-bot)",
-          color: msg.sender === "user" ? "#fff" : "#000",
-          boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
-          display: "flex",
-          alignItems: "center",
+          flex: 1,
+          overflowY: "auto",
+          padding: "1rem",
         }}
       >
-        <span>{msg.text}</span>
-      </div>
-    </div>
-  ))}
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            style={{
+              display: "flex",
+              justifyContent:
+                msg.sender === "user" ? "flex-end" : "flex-start",
+              marginBottom: "1rem",
+            }}
+          >
+            {msg.sender !== "user" && (
+              <img
+                src="129.png"
+                style={{
+                  width: "30px",
+                  height: "30px",
+                  marginRight: "10px",
+                }}
+              />
+            )}
+            <div
+              style={{
+                maxWidth: "70%",
+                padding: "0.75rem 1rem",
+                borderRadius: "20px",
+                backgroundColor:
+                  msg.sender === "user"
+                    ? "var(--message-bg-user)"
+                    : "var(--message-bg-bot)",
+                color: msg.sender === "user" ? "#fff" : "#000",
+                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              <span>{msg.text}</span>
+            </div>
+          </div>
+        ))}
 
-  {loading && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            marginBottom: "1rem",
-          }}
-        >
+        {loading && (
           <div
             style={{
-              maxWidth: "70%",
-              padding: "0.75rem 1rem",
-              borderRadius: "20px",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start", // Align spinner to the left
+              justifyContent: "flex-start",
+              marginBottom: "1rem",
             }}
           >
             <div
               style={{
-                border: "4px solid rgba(5, 91, 204, 0.6)",
-                borderTop: "4px solid #fff",
-                width: "20px",
-                height: "20px",
-                borderRadius: "50%",
-                animation: "spin 3s linear infinite",
-                marginRight: "10px",
+                maxWidth: "70%",
+                padding: "0.75rem 1rem",
+                borderRadius: "20px",
               }}
-            />
+            >
+              <div
+                style={{
+                  border: "4px solid rgba(65, 111, 170, 0.6)",
+                  borderTop: "4px solid #fff",
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  animation: "spin 2.5s linear infinite",
+                  marginRight: "10px",
+                }}
+              />
+            </div>
           </div>
-        </div>
-      )}
-  </div>
+        )}
+      </div>
 
       {/* Input Section */}
       <div
@@ -221,7 +228,7 @@ const ChatBot = () => {
           alignItems: "center",
           padding: "0.75rem 1rem",
           borderTop: "1px solid #ddd",
-          backgroundColor: "#fff",
+          backgroundColor: "#fff4f2",
           borderRadius: "0 0 10px 10px",
         }}
       >
@@ -241,19 +248,62 @@ const ChatBot = () => {
           }}
         />
         <button
-          onClick={sendMessage}
+          onClick={loading ? () => {} : sendMessage} // Disable functionality when loading
           style={{
-            backgroundColor: "var(--primary-color)",
-            color: "#fff",
+            backgroundColor: "var(--primary-color)", // Use your primary color
             border: "none",
-            borderRadius: "20px",
-            padding: "0.5rem 1rem",
-            fontSize: "0.9rem",
+            borderRadius: "50%", // Circular button
+            padding: "0.5rem",
             cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "40px", // Set a fixed width and height
+            height: "40px",
           }}
-          disabled={loading}
+          disabled={loading} // Disable the button when loading
         >
-          {loading ? "..." : "Send"}
+          {loading ? (
+            // "Stop" Icon SVG for loading state
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="white" // White stroke for the icon
+              style={{
+                width: "20px",
+                height: "20px",
+              }}
+            >
+              <rect
+                x="6"
+                y="6"
+                width="12"
+                height="12"
+                rx="2" // Rounded corners for the stop square
+              />
+            </svg>
+          ) : (
+            // "Send" Icon SVG for normal state
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="white" // White stroke for the icon
+              style={{
+                width: "20px",
+                height: "20px",
+              }}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.5 19.5l15-7.5-15-7.5v6l10.5 1.5-10.5 1.5v6z"
+              />
+            </svg>
+          )}
         </button>
       </div>
     </div>
