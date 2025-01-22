@@ -1,9 +1,9 @@
 :root {
-  --header-bg-color: #ffebd6;
+  --header-bg-color: #bd6e1b;
   --primary-color: #0a69c2;
   --primary-hover-color: #43a047;
   --secondary-color: #f9f9f9;
-  --message-bg-bot: #e0e0e0;
+  --message-bg-bot: #f3f3f3fd;
   --message-bg-user: #0a69c2;
 }
 ::-webkit-scrollbar {

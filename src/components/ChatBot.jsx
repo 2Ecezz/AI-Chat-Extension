@@ -1,18 +1,38 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Lottie from "lottie-react";
+import chatbotAnimation from "../assets/chatbot.json";
 
 const ChatBot = () => {
+  const EXPIRATION_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
+
   const [messages, setMessages] = useState(() => {
     // Load messages from localStorage on initial render
-    const savedMessages = localStorage.getItem("chatMessages");
-    return savedMessages ? JSON.parse(savedMessages) : [];
+    const savedData = localStorage.getItem("chatMessagesWithTimestamp");
+    if (savedData) {
+      const { messages, timestamp } = JSON.parse(savedData);
+      const now = Date.now();
+
+      // Check if the saved messages have expired
+      if (now - timestamp < EXPIRATION_TIME) {
+        return messages; // Messages are still valid
+      } else {
+        localStorage.removeItem("chatMessagesWithTimestamp"); // Remove expired messages
+      }
+    }
+    return []; // Default to empty array if no valid saved data
   });
+
   const [input, setInput] = useState(""); // To handle user input
   const [loading, setLoading] = useState(false); // Loading state for bot response
 
   // Save messages to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("chatMessages", JSON.stringify(messages));
+    const dataToSave = {
+      messages,
+      timestamp: Date.now(), // Save the current time with the messages
+    };
+    localStorage.setItem("chatMessagesWithTimestamp", JSON.stringify(dataToSave));
   }, [messages]);
 
   // Function to handle sending a message
@@ -89,137 +109,140 @@ const ChatBot = () => {
       }}
     >
       {/* Header */}
-      <div
-        style={{
-          textAlign: "center",
-          padding: "1rem 0",
-          backgroundColor: "#fff4f2",
-        }}
-      >
-        <h3
-          style={{
-            margin: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "1.5rem",
-            color: "#333",
-            gap: "0.5rem",
-          }}
-        >
-          <img
-            src="48.png" // Replace with your actual image path or URL
-            alt="AI Chat Bot Icon"
-            style={{
-              width: "32px",
-              height: "32px",
-            }}
-          />
-          AI Chat Bot
-        </h3>
-        <span
-          style={{
-            fontSize: "0.9rem",
-            color: "#777",
-            display: "block",
-            marginTop: "0.5rem",
-          }}
-        >
-          Model
-        </span>
         <div
           style={{
-            marginTop: "0.5rem",
-            padding: "0.25rem 0.5rem",
-            backgroundColor: "#fff",
-            borderRadius: "16px",
-            border: "1px solid #ddd",
-            display: "inline-block",
-            fontSize: "1rem",
-            fontWeight: "500",
-            color: "#333",
+            textAlign: "center",
+            padding: "1rem 0",
+            backgroundColor: "#fff4f2",
           }}
         >
-          Google Gemini 2.0
+          <h3
+            style={{
+              margin: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1.5rem",
+              color: "#333",
+              gap: "0.5rem",
+            }}
+          >
+            {/* Lottie Animation */}
+        <div
+          style={{
+            width: "32px", // Match the previous icon size
+            height: "32px",
+          }}
+        >
+          <Lottie animationData={chatbotAnimation} loop={true} />
         </div>
-      </div>
+        AI Chat Bot
+      </h3>
+          <span
+            style={{
+              fontSize: "0.9rem",
+              color: "#777",
+              display: "block",
+              marginTop: "0.5rem",
+            }}
+          >
+            Model
+          </span>
+          <div
+            style={{
+              marginTop: "0.5rem",
+              padding: "0.25rem 0.5rem",
+              backgroundColor: "#fff",
+              borderRadius: "16px",
+              border: "1px solid #ddd",
+              display: "inline-block",
+              fontSize: "1rem",
+              fontWeight: "500",
+              color: "#333",
+            }}
+          >
+            Google Gemini 1.5 Flash
+          </div>
+        </div>
 
       {/* Chat Messages Area */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "1rem",
-        }}
-      >
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            style={{
-              display: "flex",
-              justifyContent:
-                msg.sender === "user" ? "flex-end" : "flex-start",
-              marginBottom: "1rem",
-            }}
-          >
-            {msg.sender !== "user" && (
-              <img
-                src="129.png"
-                style={{
-                  width: "30px",
-                  height: "30px",
-                  marginRight: "10px",
-                }}
-              />
-            )}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "1rem",
+          }}
+        >
+          {messages.map((msg, index) => (
             <div
+              key={index}
               style={{
-                maxWidth: "70%",
-                padding: "0.75rem 1rem",
-                borderRadius: "20px",
-                backgroundColor:
-                  msg.sender === "user"
-                    ? "var(--message-bg-user)"
-                    : "var(--message-bg-bot)",
-                color: msg.sender === "user" ? "#fff" : "#000",
-                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+                display: "flex",
+                justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
+                marginBottom: "1rem",
               }}
             >
-              <span>{msg.text}</span>
+              {msg.sender !== "user" && (
+                <img
+                  src="129.png"
+                  alt="Bot Avatar"
+                  style={{
+                    width: "25px", // Slightly smaller avatar
+                    height: "25px",
+                    marginRight: "10px",
+                  }}
+                />
+              )}
+              <div
+                style={{
+                  maxWidth: "70%",
+                  padding: "0.5rem 0.75rem", // Smaller padding
+                  borderRadius: "15px", // Slightly less rounded
+                  backgroundColor:
+                    msg.sender === "user"
+                      ? "var(--message-bg-user)"
+                      : "var(--message-bg-bot)",
+                  color: msg.sender === "user" ? "#fff" : "#000",
+                  fontSize: "0.9rem", // Reduced font size
+                  lineHeight: "1.2", // Compact line spacing
+                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow
+                }}
+              >
+                <span>{msg.text}</span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {loading && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-start",
-              marginBottom: "1rem",
-            }}
-          >
+          {loading && (
             <div
               style={{
-                maxWidth: "70%",
-                padding: "0.75rem 1rem",
-                borderRadius: "20px",
+                display: "flex",
+                justifyContent: "flex-start",
+                marginBottom: "1rem",
               }}
             >
               <div
                 style={{
-                  border: "4px solid rgba(65, 111, 170, 0.6)",
-                  borderTop: "4px solid #fff",
-                  width: "20px",
-                  height: "20px",
-                  borderRadius: "50%",
-                  animation: "spin 2.5s linear infinite",
-                  marginRight: "10px",
+                  maxWidth: "70%",
+                  padding: "0.5rem 0.75rem", // Match smaller padding
+                  borderRadius: "15px",
                 }}
-              />
+              >
+                <div
+                  style={{
+                    border: "3px solid rgba(65, 111, 170, 0.6)", // Slightly smaller border
+                    borderTop: "3px solid #fff",
+                    width: "18px", // Smaller spinner size
+                    height: "18px",
+                    borderRadius: "50%",
+                    animation: "spin 1.5s linear infinite", // Faster spin
+                    marginRight: "10px",
+                  }}
+                />
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
       {/* Input Section */}
       <div
