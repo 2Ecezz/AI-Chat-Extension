@@ -136,8 +136,19 @@ const ChatBot = () => {
         >
           <Lottie animationData={chatbotAnimation} loop={true} />
         </div>
-        AI Chat Bot
-      </h3>
+        <span>Botrix</span>
+        {/* Version Number (1.0) */}
+          <span
+            style={{
+              fontSize: "0.8rem", // Smaller text
+              opacity: 0.6, // Reduced opacity
+              alignSelf: "flex-end", // Align with the baseline of "Botrix"
+              marginBottom: "0.7rem", // Adjust vertical alignment
+            }}
+          >
+            1.1.2
+          </span>
+        </h3>
           <span
             style={{
               fontSize: "0.9rem",

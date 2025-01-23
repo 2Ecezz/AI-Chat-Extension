@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "AI Bot Chat Extension",
+    "name": "Botrix Chat Extension",
     "version": "1.0",
-    "description": "A Chrome extension with an AI-powered chatbot.",
+    "description": "Botrix is a modern chatbot controlled by AI that is intended to transform how you use technology. Botrix's extensive natural language processing (NLP) skills enable smooth, human-like dialogues.",
     "action": {
       "default_popup": "index.html",
       "default_icon": "48.png" 
