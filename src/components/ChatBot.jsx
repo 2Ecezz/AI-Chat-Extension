@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Lottie from "lottie-react";
 import chatbotAnimation from "../assets/chatbot.json";
+import Lightbox from "react-image-lightbox"; // Import the lightbox component
+import "react-image-lightbox/style.css"; // Import the lightbox styles
 
 const ChatBot = () => {
   const EXPIRATION_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
@@ -26,6 +28,9 @@ const ChatBot = () => {
   const [input, setInput] = useState(""); // To handle user input
   const [loading, setLoading] = useState(false); // Loading state for bot response
   const [attachment, setAttachment] = useState(null); // To store the uploaded file
+  const [attachmentPreview, setAttachmentPreview] = useState(null); // To store the image preview URL
+  const [isImageOpen, setIsImageOpen] = useState(false); // To control the lightbox
+  const [selectedImage, setSelectedImage] = useState(""); // To store the selected image URL
   const fileInputRef = useRef(null); // Ref for the file input element
 
   // Save messages to localStorage whenever they change
@@ -42,22 +47,41 @@ const ChatBot = () => {
     const file = e.target.files[0];
     if (file) {
       setAttachment(file);
+      setAttachmentPreview(URL.createObjectURL(file)); // Create a preview URL for the image
     }
+  };
+
+  // Function to clear the attachment and preview
+  const clearAttachment = () => {
+    setAttachment(null);
+    setAttachmentPreview(null);
   };
 
   // Function to handle sending a message
   const sendMessage = async () => {
     if (!input.trim() && !attachment) return; // Prevent empty messages
 
-    // Add user's message to chat
-    const userMessage = {
-      sender: "user",
-      text: input,
-      attachment: attachment ? URL.createObjectURL(attachment) : null, // Store file URL
-    };
-    setMessages((prev) => [...prev, userMessage]);
+    // Add user's image message to chat (if attachment exists)
+    if (attachment) {
+      const imageMessage = {
+        sender: "user",
+        attachment: URL.createObjectURL(attachment), // Store file URL
+      };
+      setMessages((prev) => [...prev, imageMessage]);
+    }
+
+    // Add user's text message to chat (if input exists)
+    if (input.trim()) {
+      const textMessage = {
+        sender: "user",
+        text: input,
+      };
+      setMessages((prev) => [...prev, textMessage]);
+    }
+
     setInput(""); // Clear the input field
     setAttachment(null); // Clear the attachment
+    setAttachmentPreview(null); // Clear the attachment preview
     setLoading(true); // Show typing indicator
 
     try {
@@ -104,6 +128,12 @@ const ChatBot = () => {
     }
 
     setLoading(false); // Hide typing indicator
+  };
+
+  // Function to open the image in a lightbox
+  const openImage = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setIsImageOpen(true);
   };
 
   return (
@@ -222,35 +252,32 @@ const ChatBot = () => {
             <div
               style={{
                 maxWidth: "70%",
-                padding: "0.5rem 0.75rem", // Smaller padding
-                borderRadius: "15px", // Slightly less rounded
-                backgroundColor:
-                  msg.sender === "user"
+                padding: msg.text ? "0.5rem 0.75rem" : "0", // Only add padding for text messages
+                borderRadius: msg.text ? "15px" : "0", // Only add border radius for text messages
+                backgroundColor: msg.text
+                  ? msg.sender === "user"
                     ? "var(--message-bg-user)"
-                    : "var(--message-bg-bot)",
+                    : "var(--message-bg-bot)"
+                  : "transparent", // No background for image messages
                 color: msg.sender === "user" ? "#fff" : "#000",
                 fontSize: "0.9rem", // Reduced font size
                 lineHeight: "1.2", // Compact line spacing
-                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow
+                boxShadow: msg.text ? "0px 2px 4px rgba(0, 0, 0, 0.1)" : "none", // Only add shadow for text messages
               }}
             >
               {msg.attachment && (
-                <div
+                <img
+                  src={msg.attachment}
+                  alt="Attachment"
                   style={{
-                    marginBottom: "0.5rem",
+                    maxWidth: "100%",
+                    borderRadius: "10px",
+                    cursor: "pointer", // Add pointer cursor to indicate clickability
                   }}
-                >
-                  <img
-                    src={msg.attachment}
-                    alt="Attachment"
-                    style={{
-                      maxWidth: "100%",
-                      borderRadius: "10px",
-                    }}
-                  />
-                </div>
+                  onClick={() => openImage(msg.attachment)} // Open the image in a lightbox
+                />
               )}
-              <span>{msg.text}</span>
+              {msg.text && <span>{msg.text}</span>}
             </div>
           </div>
         ))}
@@ -285,6 +312,14 @@ const ChatBot = () => {
           </div>
         )}
       </div>
+
+      {/* Lightbox for Image Zoom */}
+      {isImageOpen && (
+        <Lightbox
+          mainSrc={selectedImage}
+          onCloseRequest={() => setIsImageOpen(false)}
+        />
+      )}
 
       {/* Input Section */}
       <div
@@ -330,7 +365,57 @@ const ChatBot = () => {
           ref={fileInputRef}
           style={{ display: "none" }}
           onChange={handleAttachment}
+          accept="image/*" // Restrict to image files
         />
+
+        {/* Image Preview */}
+        {attachmentPreview && (
+          <div
+            style={{
+              position: "relative",
+              marginRight: "0.5rem",
+            }}
+          >
+            <img
+              src={attachmentPreview}
+              alt="Attachment Preview"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "8px",
+                objectFit: "cover",
+              }}
+            />
+            <button
+              onClick={clearAttachment}
+              style={{
+                position: "absolute",
+                top: "-8px",
+                right: "-8px",
+                backgroundColor: "#f2f0f0",
+                border: "none",
+                borderRadius: "50%",
+                width: "20px",
+                height: "20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="black"
+                width="16px" // Increased from 12px to 16px
+                height="16px" // Increased from 12px to 16px
+              >
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         {/* Text Input */}
         <input
