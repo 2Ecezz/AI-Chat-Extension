@@ -2,42 +2,36 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Lottie from "lottie-react";
 import chatbotAnimation from "../assets/chatbot.json";
-import Lightbox from "react-image-lightbox"; // Import the lightbox component
-import "react-image-lightbox/style.css"; // Import the lightbox styles
 
 const ChatBot = () => {
   const EXPIRATION_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
 
   const [messages, setMessages] = useState(() => {
-    // Load messages from localStorage on initial render
     const savedData = localStorage.getItem("chatMessagesWithTimestamp");
     if (savedData) {
       const { messages, timestamp } = JSON.parse(savedData);
       const now = Date.now();
-
-      // Check if the saved messages have expired
       if (now - timestamp < EXPIRATION_TIME) {
-        return messages; // Messages are still valid
+        return messages;
       } else {
-        localStorage.removeItem("chatMessagesWithTimestamp"); // Remove expired messages
+        localStorage.removeItem("chatMessagesWithTimestamp");
       }
     }
-    return []; // Default to empty array if no valid saved data
+    return [];
   });
 
-  const [input, setInput] = useState(""); // To handle user input
-  const [loading, setLoading] = useState(false); // Loading state for bot response
-  const [attachment, setAttachment] = useState(null); // To store the uploaded file
-  const [attachmentPreview, setAttachmentPreview] = useState(null); // To store the image preview URL
-  const [isImageOpen, setIsImageOpen] = useState(false); // To control the lightbox
-  const [selectedImage, setSelectedImage] = useState(""); // To store the selected image URL
-  const fileInputRef = useRef(null); // Ref for the file input element
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [attachment, setAttachment] = useState(null);
+  const [attachmentPreview, setAttachmentPreview] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null); // To track the currently selected image
+  const fileInputRef = useRef(null);
 
   // Save messages to localStorage whenever they change
   useEffect(() => {
     const dataToSave = {
       messages,
-      timestamp: Date.now(), // Save the current time with the messages
+      timestamp: Date.now(),
     };
     localStorage.setItem("chatMessagesWithTimestamp", JSON.stringify(dataToSave));
   }, [messages]);
@@ -103,7 +97,6 @@ const ChatBot = () => {
       );
 
       // Check the API response structure and extract bot's reply
-      console.log("API Response:", response.data); // Log full response for debugging
       const botMessageText =
         response.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
@@ -130,10 +123,14 @@ const ChatBot = () => {
     setLoading(false); // Hide typing indicator
   };
 
-  // Function to open the image in a lightbox
-  const openImage = (imageUrl) => {
+  // Function to handle viewing an image
+  const handleViewImage = (imageUrl) => {
     setSelectedImage(imageUrl);
-    setIsImageOpen(true);
+  };
+
+  // Function to close the image view
+  const closeImage = () => {
+    setSelectedImage(null);
   };
 
   return (
@@ -172,23 +169,21 @@ const ChatBot = () => {
             gap: "0.5rem",
           }}
         >
-          {/* Lottie Animation */}
           <div
             style={{
-              width: "32px", // Match the previous icon size
+              width: "32px",
               height: "32px",
             }}
           >
             <Lottie animationData={chatbotAnimation} loop={true} />
           </div>
           <span>Botrix</span>
-          {/* Version Number (1.0) */}
           <span
             style={{
-              fontSize: "0.8rem", // Smaller text
-              opacity: 0.6, // Reduced opacity
-              alignSelf: "flex-end", // Align with the baseline of "Botrix"
-              marginBottom: "0.7rem", // Adjust vertical alignment
+              fontSize: "0.8rem",
+              opacity: 0.6,
+              alignSelf: "flex-end",
+              marginBottom: "0.7rem",
             }}
           >
             1.1.2
@@ -243,7 +238,7 @@ const ChatBot = () => {
                 src="129.png"
                 alt="Bot Avatar"
                 style={{
-                  width: "25px", // Slightly smaller avatar
+                  width: "25px",
                   height: "25px",
                   marginRight: "10px",
                 }}
@@ -252,30 +247,32 @@ const ChatBot = () => {
             <div
               style={{
                 maxWidth: "70%",
-                padding: msg.text ? "0.5rem 0.75rem" : "0", // Only add padding for text messages
-                borderRadius: msg.text ? "15px" : "0", // Only add border radius for text messages
+                padding: msg.text ? "0.5rem 0.75rem" : "0",
+                borderRadius: msg.text ? "15px" : "0",
                 backgroundColor: msg.text
                   ? msg.sender === "user"
                     ? "var(--message-bg-user)"
                     : "var(--message-bg-bot)"
-                  : "transparent", // No background for image messages
+                  : "transparent",
                 color: msg.sender === "user" ? "#fff" : "#000",
-                fontSize: "0.9rem", // Reduced font size
-                lineHeight: "1.2", // Compact line spacing
-                boxShadow: msg.text ? "0px 2px 4px rgba(0, 0, 0, 0.1)" : "none", // Only add shadow for text messages
+                fontSize: "0.9rem",
+                lineHeight: "1.2",
+                boxShadow: msg.text ? "0px 2px 4px rgba(0, 0, 0, 0.1)" : "none",
               }}
             >
               {msg.attachment && (
-                <img
-                  src={msg.attachment}
-                  alt="Attachment"
-                  style={{
-                    maxWidth: "100%",
-                    borderRadius: "10px",
-                    cursor: "pointer", // Add pointer cursor to indicate clickability
-                  }}
-                  onClick={() => openImage(msg.attachment)} // Open the image in a lightbox
-                />
+                <div>
+                  <img
+                    src={msg.attachment}
+                    alt="Attachment"
+                    style={{
+                      maxWidth: "100%",
+                      borderRadius: "10px",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => handleViewImage(msg.attachment)}
+                  />
+                </div>
               )}
               {msg.text && <span>{msg.text}</span>}
             </div>
@@ -293,18 +290,18 @@ const ChatBot = () => {
             <div
               style={{
                 maxWidth: "70%",
-                padding: "0.5rem 0.75rem", // Match smaller padding
+                padding: "0.5rem 0.75rem",
                 borderRadius: "15px",
               }}
             >
               <div
                 style={{
-                  border: "3px solid rgba(65, 111, 170, 0.6)", // Slightly smaller border
+                  border: "3px solid rgba(65, 111, 170, 0.6)",
                   borderTop: "3px solid #fff",
-                  width: "18px", // Smaller spinner size
+                  width: "18px",
                   height: "18px",
                   borderRadius: "50%",
-                  animation: "spin 1.5s linear infinite", // Faster spin
+                  animation: "spin 1.5s linear infinite",
                   marginRight: "10px",
                 }}
               />
@@ -313,12 +310,52 @@ const ChatBot = () => {
         )}
       </div>
 
-      {/* Lightbox for Image Zoom */}
-      {isImageOpen && (
-        <Lightbox
-          mainSrc={selectedImage}
-          onCloseRequest={() => setIsImageOpen(false)}
-        />
+      {/* Image Viewer Modal */}
+      {selectedImage && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <img
+            src={selectedImage}
+            alt="Selected Attachment"
+            style={{
+              maxWidth: "90%",
+              maxHeight: "90%",
+              borderRadius: "10px",
+            }}
+          />
+          <button
+            onClick={closeImage}
+            style={{
+              position: "absolute",
+              top: "20px",
+              right: "20px",
+              backgroundColor: "#fff",
+              border: "none",
+              borderRadius: "50%",
+              width: "40px",
+              height: "40px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: "1.2rem",
+            }}
+          >
+            &times;
+          </button>
+        </div>
       )}
 
       {/* Input Section */}
@@ -365,7 +402,7 @@ const ChatBot = () => {
           ref={fileInputRef}
           style={{ display: "none" }}
           onChange={handleAttachment}
-          accept="image/*" // Restrict to image files
+          accept="image/*"
         />
 
         {/* Image Preview */}
@@ -407,8 +444,8 @@ const ChatBot = () => {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="black"
-                width="16px" // Increased from 12px to 16px
-                height="16px" // Increased from 12px to 16px
+                width="16px"
+                height="16px"
               >
                 <path d="M0 0h24v24H0z" fill="none" />
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
@@ -436,50 +473,42 @@ const ChatBot = () => {
 
         {/* Send Button */}
         <button
-          onClick={loading ? () => {} : sendMessage} // Disable functionality when loading
+          onClick={loading ? () => {} : sendMessage}
           style={{
-            backgroundColor: "var(--primary-color)", // Use your primary color
+            backgroundColor: "var(--primary-color)",
             border: "none",
-            borderRadius: "50%", // Circular button
+            borderRadius: "50%",
             padding: "0.5rem",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: "40px", // Set a fixed width and height
+            width: "40px",
             height: "40px",
           }}
-          disabled={loading} // Disable the button when loading
+          disabled={loading}
         >
           {loading ? (
-            // "Stop" Icon SVG for loading state
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="2"
-              stroke="white" // White stroke for the icon
+              stroke="white"
               style={{
                 width: "20px",
                 height: "20px",
               }}
             >
-              <rect
-                x="6"
-                y="6"
-                width="12"
-                height="12"
-                rx="2" // Rounded corners for the stop square
-              />
+              <rect x="6" y="6" width="12" height="12" rx="2" />
             </svg>
           ) : (
-            // "Send" Icon SVG for normal state
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="2"
-              stroke="white" // White stroke for the icon
+              stroke="white"
               style={{
                 width: "20px",
                 height: "20px",
