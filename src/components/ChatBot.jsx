@@ -40,8 +40,12 @@ const ChatBot = () => {
   const handleAttachment = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setAttachment(file);
-      setAttachmentPreview(URL.createObjectURL(file)); // Create a preview URL for the image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAttachment(file);
+        setAttachmentPreview(reader.result); // Store Base64 string
+      };
+      reader.readAsDataURL(file); // Convert file to Base64
     }
   };
 
@@ -59,7 +63,7 @@ const ChatBot = () => {
     if (attachment) {
       const imageMessage = {
         sender: "user",
-        attachment: URL.createObjectURL(attachment), // Store file URL
+        attachment: attachmentPreview, // Store Base64 string
       };
       setMessages((prev) => [...prev, imageMessage]);
     }
